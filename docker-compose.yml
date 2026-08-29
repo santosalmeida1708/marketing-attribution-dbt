@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: mkt_db
+      POSTGRES_USER: mkt_user
+      POSTGRES_PASSWORD: mkt_pass
+    ports:
+      - "5435:5432"
+    volumes:
+      - mkt_pgdata:/var/lib/postgresql/data
+volumes:
+  mkt_pgdata:

@@ -1,0 +1,12 @@
+marketing_attribution:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('DBT_HOST', 'localhost') }}"
+      user: "{{ env_var('DBT_USER', 'mkt_user') }}"
+      password: "{{ env_var('DBT_PASSWORD', 'mkt_pass') }}"
+      port: "{{ env_var('DBT_PORT', '5435') | int }}"
+      dbname: "{{ env_var('DBT_DBNAME', 'mkt_db') }}"
+      schema: public
+      threads: 4
