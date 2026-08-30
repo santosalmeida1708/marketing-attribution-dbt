@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  dbt-compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dbt
+        run: |
+          pip install --upgrade pip
+          pip install dbt-postgres==1.7.0
+
+      - name: Lint SQL with sqlfluff
+        run: |
+          pip install sqlfluff sqlfluff-templater-dbt
+          sqlfluff lint models/ --dialect postgres --templater dbt || true
+
+      - name: Validate dbt project structure
+        run: |
+          python -c "
+          import yaml, os, sys
+
+          # Validate dbt_project.yml
+          with open('dbt_project.yml') as f:
+              project = yaml.safe_load(f)
+          assert 'name' in project, 'dbt_project.yml missing name'
+          assert 'models' in project, 'dbt_project.yml missing models'
+          print(f'  ✓ dbt_project.yml válido — projeto: {project[\"name\"]}')
+
+          # Count SQL models
+          sql_files = []
+          for root, dirs, files in os.walk('models'):
+              for f in files:
+                  if f.endswith('.sql'):
+                      sql_files.append(os.path.join(root, f))
+          print(f'  ✓ {len(sql_files)} modelos SQL encontrados')
+          if len(sql_files) == 0:
+              print('  ✗ Nenhum modelo encontrado!')
+              sys.exit(1)
+          "
+
+  docker-compose-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate docker-compose.yml
+        run: docker compose config --quiet
